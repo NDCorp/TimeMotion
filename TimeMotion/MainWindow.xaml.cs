@@ -27,5 +27,7 @@ namespace TimeMotion
             InitializeComponent();
             DataContext = vmClock;
         }
+
+
     }
 }

@@ -14,18 +14,46 @@ namespace TimeMotion
         private Queue<MDataBalls> clock;
         private List<MDataBalls> minutes, fiveMinutes, hours;
         private List<MDataBalls> tempList;
-        private int nbrClocks;
-        private int[] clocksFileContent;
+        private List<int> clocksFileContent;
+        private int nbrClocks, nbrBalls;
         private string fileLocation;
         private const string FOLDER_NAME = "datafile";
         private const string INPUT_FILE_NAME = "input.txt";     //source clock file
         private const string OUTPUT_FILE_NAME = "output.txt";   //Time of motions file
         private const string OUTPUT_TEXT = "balls cycle after";
         private const string OUTPUT_DAYS = "days";
-        private const string HEADER_TEXT = "Outputs: Number of balls, Time of motion";       
+        private const string HEADER_TEXT = "Outputs: Number of balls, Time of motion";
+        private const int ZERO = 0;
+        private const bool FIX = true;
 
+        public VMBallClock()
+        {
+            clock = new Queue<MDataBalls>();
+            minutes = new List<MDataBalls>();
+            fiveMinutes = new List<MDataBalls>();
+            hours = new List<MDataBalls>();
 
+            //The fixed ball: represents 1:00 when minute = 0 and fiveminute = 0
+            hours.Add(new MDataBalls(1, FIX));
+        }
 
+        public void GetClock()
+        {
+            nbrClocks = clocksFileContent.Count;
+
+            //Execute only if clocksFileContent has some data
+            if (nbrClocks > ZERO)
+            {
+                nbrBalls = clocksFileContent.First();
+                clocksFileContent.RemoveAt(ZERO);
+
+                //Create balls for the clock
+                for (int i = 0; i < nbrBalls; i++)
+                {
+                    clock.Enqueue(new MDataBalls(i));
+                }
+            }
+        }
         #region OutputData: Write data (nbrBalls treated, Time/ duration of motion in day)
         public void OutputData(bool createFile = false)
         {
@@ -63,10 +91,11 @@ namespace TimeMotion
 
             //Convert number of balls read from string to integer. nbrClock: number max of clocks read
             nbrClocks = 0;
-            foreach (string nbrBalls in tempFileContent)
-            {
-                clocksFileContent[nbrClocks++] = int.Parse(nbrBalls);
-            }
+            //foreach (string nbrBalls in tempFileContent)
+            //{
+            //    clocksFileContent[nbrClocks++] = int.Parse(nbrBalls);
+                clocksFileContent = tempFileContent.Select(data => data).Cast<int>().ToList();
+            //}
         }
         #endregion
 
