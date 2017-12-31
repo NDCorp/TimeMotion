@@ -20,9 +20,12 @@ namespace TimeMotion
     /// </summary>
     public partial class MainWindow : Window
     {
+        private VMBallClock vmClock;
+
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = vmClock;
         }
     }
 }
