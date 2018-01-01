@@ -11,11 +11,10 @@ namespace TimeMotion
 {
     class VMBallClock:INotifyPropertyChanged
     {
-        private Queue<MDataBalls> clock;
+        private Queue<MDataBalls> clock, tempList;
         private List<MDataBalls> minutes, fiveMinutes, hours;
-        private List<MDataBalls> tempList;
         private List<int> clocksFileContent;
-        private int nbrClocks, nbrBalls;
+        private int nbrClocks, nbrBalls, time;
         private string fileLocation;
         private const string FOLDER_NAME = "datafile";
         private const string INPUT_FILE_NAME = "input.txt";     //source clock file
@@ -25,6 +24,7 @@ namespace TimeMotion
         private const string HEADER_TEXT = "Outputs: Number of balls, Time of motion";
         private const int ZERO = 0;
         private const int ONE = 0;
+        private const int MAX_TIME = 12;
         private const int MAX_SIZE_MIN = 4;
         private const int MAX_SIZE_FIVE_MIN = 11;
         private const int MAX_SIZE_HOURS = 11;
@@ -36,13 +36,17 @@ namespace TimeMotion
             clock = new Queue<MDataBalls>();
             minutes = new List<MDataBalls>();
             fiveMinutes = new List<MDataBalls>();
-            tempList = new List<MDataBalls>();
+            tempList = new Queue<MDataBalls>();
+            tempList = clock;
+
             hours = new List<MDataBalls>
             {
                 //The fixed ball: represents 1:00 when minute = 0 and fiveminute = 0
                 new MDataBalls(ONE, FIX)
             };
             clocksFileContent = new List<int>();
+
+            time = 0;  //nbr of hours
         }
         #endregion
 
@@ -60,43 +64,68 @@ namespace TimeMotion
         {
             while (minutes.Count <= MAX_SIZE_MIN)
             {
-                if (minutes.Count == MAX_SIZE_MIN)
-                    minutes.Reverse();
-
+                //if (minutes.Count == MAX_SIZE_MIN)
+                //    minutes.Reverse();
+                
                 minutes.Add(clock.Dequeue());
 
+                //Check if a list is full and Release balls
                 if (minutes.Count > MAX_SIZE_MIN)
                     ReleaseBalls((int)ListID.MINUTE);
+                if (fiveMinutes.Count > MAX_SIZE_FIVE_MIN)
+                    ReleaseBalls((int)ListID.MINUTE);
+                if (hours.Count > MAX_SIZE_HOURS)
+                    ReleaseBalls((int)ListID.HOUR);
+
+                //If hours is empty, add 12h to time
+                if (hours.Count == ZERO)
+                    time += MAX_TIME;
+
+                //Leave if clock == tempList
+                if (clock == tempList)
+                    break;
             }
         }
         #endregion
 
+        #region Release balls
         public void ReleaseBalls(int listID)
         {
-            //MDataBalls tempBall;
+            MDataBalls tempBall;
             switch (listID)
             {
-                case (int)ListID.MINUTE:
+                case (int)ListID.MINUTE:        //Release minutes balls
                     fiveMinutes.Add(minutes.Last());
                     minutes.RemoveAt(minutes.Count() - ONE);
-                    foreach (MDataBalls tempBall in minutes) //for(int i = 0; i < minutes.Count(); i++)
-                        clock.Enqueue(tempBall);
+                    for(int i = 0; i < MAX_SIZE_MIN; i++)
+                    { 
+                        clock.Enqueue(minutes[i]);
+                        minutes.RemoveAt(i);
+                    }
                     break;
-                case (int)ListID.FIVE_MINUTE:
+                case (int)ListID.FIVE_MINUTE:    //Release five_minute balls
                     hours.Add(fiveMinutes.Last());
                     fiveMinutes.RemoveAt(fiveMinutes.Count() - ONE);
-                    foreach (MDataBalls tempBall in fiveMinutes) //for(int i = 0; i < fiveMinutes.Count(); i++)
-                        clock.Enqueue(tempBall);
+                    for (int i = 0; i < MAX_SIZE_FIVE_MIN; i++)
+                    {
+                        clock.Enqueue(fiveMinutes[i]);
+                        fiveMinutes.RemoveAt(i);
+                    }
                     break;
-                case (int)ListID.HOUR:
-                    hours.Add(fiveMinutes.First());
-                    fiveMinutes.RemoveAt(fiveMinutes.Count() - ONE);
-                    foreach (MDataBalls tempBall in fiveMinutes) //for(int i = 0; i < fiveMinutes.Count(); i++)
-                        clock.Enqueue(tempBall);
+                case (int)ListID.HOUR:           //Release hour balls
+                    tempBall = hours.First();
+                    hours.RemoveAt(ZERO);
+                    for (int i = 0; i < MAX_SIZE_HOURS; i++)
+                    { 
+                        clock.Enqueue(hours[i]);
+                        hours.RemoveAt(i);
+                    }
+                    clock.Enqueue(tempBall);
                     break;
             }
         }
-        
+        #endregion
+
         #region GetClock: get a clock from input file
         public bool GetClock()
         {
