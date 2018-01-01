@@ -5,8 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TimeMotion"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Time and Motion" Height="350" Width="525">
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height=".5*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Button Grid.Row="3" Grid.Column="1" Margin="30" Name="BtnEvaluate" Content="Evaluate" FontWeight="DemiBold" Click="BtnEvaluate_Click"/>
     </Grid>
 </Window>

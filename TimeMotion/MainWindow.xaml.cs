@@ -25,9 +25,37 @@ namespace TimeMotion
         public MainWindow()
         {
             InitializeComponent();
+            vmClock = new VMBallClock();
             DataContext = vmClock;
         }
 
+        public void Execute ()
+        {
 
+        }
+
+        private void BtnEvaluate_Click(object sender, RoutedEventArgs e)
+        {
+            bool newFile = true;
+
+            try
+            {
+                vmClock.InputData();
+
+                //A zero signifies the end of input
+                while (vmClock.GetClock())
+                {
+                    //calculate time
+                    //vmClock.EvaluateTime();
+                    //Output
+                    vmClock.OutputData(newFile);
+                    newFile = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Exception " + ex.HResult.ToString() + ": " + ex.Message);
+            }
+        }
     }
 }
