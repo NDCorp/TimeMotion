@@ -74,11 +74,13 @@ namespace TimeMotion
                 if (fiveMinutes.Count > MAX_SIZE_FIVE_MIN)
                     ReleaseBalls((int)ListID.FIVE_MINUTE);
                 if (hours.Count > MAX_SIZE_HOURS)
+                { 
                     ReleaseBalls((int)ListID.HOUR);
 
                 //If hours is empty, add 12h to time
-                if (hours.Count == ZERO)
+                //if (hours.Count == ZERO)
                     time += MAX_TIME;
+                }
 
                 //Leave if clock == tempList (the clock returns to its initial ordering)
                 if (clock == tempList)
