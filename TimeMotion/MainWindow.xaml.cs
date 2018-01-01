@@ -46,15 +46,17 @@ namespace TimeMotion
                 while (vmClock.GetClock())
                 {
                     //calculate time
-                    //vmClock.EvaluateTime();
+                    vmClock.EvaluateTime();
                     //Output
                     vmClock.OutputData(newFile);
                     newFile = false;
                 }
+
+                MessageBox.Show("End of process", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Exception " + ex.HResult.ToString() + ": " + ex.Message);
+                MessageBox.Show("Exception " + ex.HResult.ToString() + ": " + ex.Message, "Exception", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

@@ -23,8 +23,9 @@ namespace TimeMotion
         private const string OUTPUT_DAYS = "days";
         private const string HEADER_TEXT = "Outputs: Number of balls, Time of motion";
         private const int ZERO = 0;
-        private const int ONE = 0;
+        private const int ONE = 1;
         private const int MAX_TIME = 12;
+        private const int HOURS_IN_DAY = 24;
         private const int MAX_SIZE_MIN = 4;
         private const int MAX_SIZE_FIVE_MIN = 11;
         private const int MAX_SIZE_HOURS = 11;
@@ -37,8 +38,6 @@ namespace TimeMotion
             minutes = new List<MDataBalls>();
             fiveMinutes = new List<MDataBalls>();
             tempList = new Queue<MDataBalls>();
-            tempList = clock;
-
             hours = new List<MDataBalls>
             {
                 //The fixed ball: represents 1:00 when minute = 0 and fiveminute = 0
@@ -73,7 +72,7 @@ namespace TimeMotion
                 if (minutes.Count > MAX_SIZE_MIN)
                     ReleaseBalls((int)ListID.MINUTE);
                 if (fiveMinutes.Count > MAX_SIZE_FIVE_MIN)
-                    ReleaseBalls((int)ListID.MINUTE);
+                    ReleaseBalls((int)ListID.FIVE_MINUTE);
                 if (hours.Count > MAX_SIZE_HOURS)
                     ReleaseBalls((int)ListID.HOUR);
 
@@ -81,7 +80,7 @@ namespace TimeMotion
                 if (hours.Count == ZERO)
                     time += MAX_TIME;
 
-                //Leave if clock == tempList
+                //Leave if clock == tempList (the clock returns to its initial ordering)
                 if (clock == tempList)
                     break;
             }
@@ -97,28 +96,32 @@ namespace TimeMotion
                 case (int)ListID.MINUTE:        //Release minutes balls
                     fiveMinutes.Add(minutes.Last());
                     minutes.RemoveAt(minutes.Count() - ONE);
-                    for(int i = 0; i < MAX_SIZE_MIN; i++)
+                    //for(int i = 0; i < MAX_SIZE_MIN; i++)
+                    while (minutes.Count > 0)    
                     { 
-                        clock.Enqueue(minutes[i]);
-                        minutes.RemoveAt(i);
+                        clock.Enqueue(minutes.First());
+                        minutes.RemoveAt(ZERO);
                     }
+                    
                     break;
                 case (int)ListID.FIVE_MINUTE:    //Release five_minute balls
                     hours.Add(fiveMinutes.Last());
                     fiveMinutes.RemoveAt(fiveMinutes.Count() - ONE);
-                    for (int i = 0; i < MAX_SIZE_FIVE_MIN; i++)
+                    //for (int i = 0; i < MAX_SIZE_FIVE_MIN; i++)
+                    while (fiveMinutes.Count > 0)
                     {
-                        clock.Enqueue(fiveMinutes[i]);
-                        fiveMinutes.RemoveAt(i);
+                        clock.Enqueue(fiveMinutes.First());
+                        fiveMinutes.RemoveAt(ZERO);
                     }
                     break;
                 case (int)ListID.HOUR:           //Release hour balls
                     tempBall = hours.First();
                     hours.RemoveAt(ZERO);
-                    for (int i = 0; i < MAX_SIZE_HOURS; i++)
-                    { 
-                        clock.Enqueue(hours[i]);
-                        hours.RemoveAt(i);
+                    //for (int i = 0; i < MAX_SIZE_HOURS; i++)
+                    while (hours.Count > 0)
+                    {
+                        clock.Enqueue(hours.First());
+                        hours.RemoveAt(ZERO);
                     }
                     clock.Enqueue(tempBall);
                     break;
@@ -129,6 +132,7 @@ namespace TimeMotion
         #region GetClock: get a clock from input file
         public bool GetClock()
         {
+            MDataBalls tempBall;
             bool newInput;
 
             nbrClocks = clocksFileContent.Count;
@@ -147,7 +151,13 @@ namespace TimeMotion
                 //Create balls for the clock
                 clock.Clear();
                 for (int i = 0; i < nbrBalls; i++)
-                    clock.Enqueue(new MDataBalls(i));
+                {
+                    tempBall = new MDataBalls(i);
+                    clock.Enqueue(tempBall);
+                    tempList.Enqueue(tempBall);
+                }
+                    
+                //tempList = clock;   //save a temp copy 
             }
 
             return newInput;
@@ -173,7 +183,7 @@ namespace TimeMotion
 
             //Write text in file
             strWrite = File.AppendText(fullName);
-            strWrite.WriteLine(Environment.NewLine + nbrBalls + OUTPUT_TEXT + "Time" + OUTPUT_DAYS); //nbrBalls, Time
+            strWrite.WriteLine(Environment.NewLine + nbrBalls + OUTPUT_TEXT + time/HOURS_IN_DAY + OUTPUT_DAYS); //nbrBalls, Time
 
             strWrite.Close();
         }
