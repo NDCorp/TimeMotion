@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* **************************************************************************/
+/* Source: This link has a good description of the problem:                 */
+/* http://code.jsoftware.com/wiki/Essays/The_Ball_Clock_Problem             */
+/****************************************************************************/
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -9,49 +14,50 @@ using System.Threading.Tasks;
 
 namespace TimeMotion
 {
-    class VMBallClock:INotifyPropertyChanged
+    class VMBallClock : INotifyPropertyChanged
     {
-        private Queue<MDataBalls> clock, tempList;
-        private List<MDataBalls> minutes, fiveMinutes, hours;
-        private List<int> clocksFileContent;
+        private Queue<MDataBall> clockQueue, tempQueue;
+        private List<MDataBall> minutes, fiveMinutes, hours;
+        private List<int> clocksFile;
         private int nbrClocks, nbrBalls, time;
-        private string fileLocation;
+        private string fileLocation, fullName;
         private const string FOLDER_NAME = "datafile";
         private const string INPUT_FILE_NAME = "input.txt";     //source clock file
         private const string OUTPUT_FILE_NAME = "output.txt";   //Time of motions file
-        private const string OUTPUT_TEXT = "balls cycle after";
-        private const string OUTPUT_DAYS = "days";
-        private const string HEADER_TEXT = "Outputs: Number of balls, Time of motion";
+        private const string OUTPUT_TEXT = " balls cycle after ";
+        private const string OUTPUT_DAYS = " days";
+        private const string HEADER_TEXT = "Outputs: Number of balls, Time of motion (Only numbers between 27 and 127)";
         private const int ZERO = 0;
         private const int ONE = 1;
-        private const int MAX_TIME = 12;
+        private const int MAX_HOUR = 12;
         private const int HOURS_IN_DAY = 24;
         private const int MAX_SIZE_MIN = 4;
         private const int MAX_SIZE_FIVE_MIN = 11;
         private const int MAX_SIZE_HOURS = 11;
-        private const bool FIX = true;
 
         #region Constructor
         public VMBallClock()
         {
-            clock = new Queue<MDataBalls>();
-            minutes = new List<MDataBalls>();
-            fiveMinutes = new List<MDataBalls>();
-            tempList = new Queue<MDataBalls>();
-            hours = new List<MDataBalls>
-            {
-                //The fixed ball: represents 1:00 when minute = 0 and fiveminute = 0
-                new MDataBalls(ONE, FIX)
-            };
-            clocksFileContent = new List<int>();
-
-            time = 0;  //nbr of hours
+            clockQueue = new Queue<MDataBall>();
+            tempQueue = new Queue<MDataBall>();
+            minutes = new List<MDataBall>();
+            fiveMinutes = new List<MDataBall>();
+            hours = new List<MDataBall>();
+            clocksFile = new List<int>();
         }
         #endregion
 
-        #region ID for each list
+        #region BallRange: Ball range
+        private enum BallRange
+        {
+            MIN = 27,
+            MAX = 127
+        }
+        #endregion
+
+        #region ListID: ID for each list
         private enum ListID
-        { 
+        {
             HOUR = 1,
             FIVE_MINUTE,
             MINUTE
@@ -61,131 +67,200 @@ namespace TimeMotion
         #region Time and Motion calcultation
         public void EvaluateTime()
         {
+            time = 0;  //nbr of hours/days
+
             while (minutes.Count <= MAX_SIZE_MIN)
             {
-                //if (minutes.Count == MAX_SIZE_MIN)
-                //    minutes.Reverse();
-                
-                minutes.Add(clock.Dequeue());
+                minutes.Add(clockQueue.Dequeue());
 
                 //Check if a list is full and Release balls
                 if (minutes.Count > MAX_SIZE_MIN)
                     ReleaseBalls((int)ListID.MINUTE);
+
                 if (fiveMinutes.Count > MAX_SIZE_FIVE_MIN)
                     ReleaseBalls((int)ListID.FIVE_MINUTE);
+
                 if (hours.Count > MAX_SIZE_HOURS)
-                { 
+                {
                     ReleaseBalls((int)ListID.HOUR);
+                    time += MAX_HOUR;
 
-                //If hours is empty, add 12h to time
-                //if (hours.Count == ZERO)
-                    time += MAX_TIME;
+                    if (time == HOURS_IN_DAY)   //24h elapsed
+                    {
+                        //We know that the clock has the full number of balls here, because the hour list has been released
+                        //so check if the clock queue is back to the initial state
+                        if (CheckInitialState(clockQueue))
+                            time /= HOURS_IN_DAY;           //find number of days
+                        else
+                            time = ZERO;
+
+                        break;  //Quit while loop after 24h
+                    }
                 }
+            }
 
-                //Leave if clock == tempList (the clock returns to its initial ordering)
-                if (clock == tempList)
-                    break;
+            //The relative order of balls has changed in (clock), now calculate the number of days (if clockQueue is not yet in initial state) 
+            CalculateNbrDays();
+
+        }
+        #endregion
+
+        #region CalculateNbrDays: Calculate Nbr Days to return to the initial state
+        private void CalculateNbrDays()
+        {
+            Queue<MDataBall> savedQueue = new Queue<MDataBall>();
+
+            while (!CheckInitialState(clockQueue))
+            {
+                //save clock queue with the new relative order only when time = 0
+                if (time == ZERO)
+                    foreach (MDataBall currBall in clockQueue)
+                        savedQueue.Enqueue(currBall);
+
+                //for each ball in clock queue, use its ballID to index a specific ball into the initial queue (tempQueue) and enqueue this ball from tempQueue into clock
+                clockQueue.Clear();
+                foreach (MDataBall currBall in savedQueue)
+                    clockQueue.Enqueue(tempQueue.ElementAt(currBall.BallID));
+
+                //save the n-1 state of clockqueue
+                tempQueue.Clear();
+                foreach (MDataBall currBall in clockQueue)
+                    tempQueue.Enqueue(currBall);
+
+                //Add one day
+                time++;
             }
         }
         #endregion
 
-        #region Release balls
+        #region CheckInitialState: Check if Initial State
+        private bool CheckInitialState(Queue<MDataBall> currQueue)
+        {
+            bool initial = true;
+            int i = 0;
+
+            foreach (MDataBall currBall in currQueue)
+            {
+                //for each ball, if one doesn't match, the queue is not in the initial state, so leave and return false
+                if (currBall.BallID != i++)
+                {
+                    initial = false;
+                    break;
+                }
+            }
+
+            return initial;
+        }
+        #endregion
+
+        #region ReleaseBalls: Release balls from minutes to fiveMinutes, from fiveMinutes to hours, from hours to clockQueue
         public void ReleaseBalls(int listID)
         {
-            MDataBalls tempBall;
+            MDataBall tempBall;
             switch (listID)
             {
                 case (int)ListID.MINUTE:        //Release minutes balls
                     fiveMinutes.Add(minutes.Last());
                     minutes.RemoveAt(minutes.Count() - ONE);
-                    //for(int i = 0; i < MAX_SIZE_MIN; i++)
-                    while (minutes.Count > 0)    
-                    { 
-                        clock.Enqueue(minutes.First());
+                    minutes.Reverse();          //the first in list will be the last to leave the list
+
+                    while (minutes.Count > 0)
+                    {
+                        clockQueue.Enqueue(minutes.First());
                         minutes.RemoveAt(ZERO);
                     }
-                    
                     break;
                 case (int)ListID.FIVE_MINUTE:    //Release five_minute balls
                     hours.Add(fiveMinutes.Last());
                     fiveMinutes.RemoveAt(fiveMinutes.Count() - ONE);
-                    //for (int i = 0; i < MAX_SIZE_FIVE_MIN; i++)
+                    fiveMinutes.Reverse();       //the first in list will be the last to leave the list
+
                     while (fiveMinutes.Count > 0)
                     {
-                        clock.Enqueue(fiveMinutes.First());
+                        clockQueue.Enqueue(fiveMinutes.First());
                         fiveMinutes.RemoveAt(ZERO);
                     }
                     break;
                 case (int)ListID.HOUR:           //Release hour balls
-                    tempBall = hours.First();
-                    hours.RemoveAt(ZERO);
-                    //for (int i = 0; i < MAX_SIZE_HOURS; i++)
+                    tempBall = hours.Last();
+                    hours.RemoveAt(hours.Count - ONE);
+                    hours.Reverse();            //the first in list will be the last to leave the list
+
                     while (hours.Count > 0)
                     {
-                        clock.Enqueue(hours.First());
+                        clockQueue.Enqueue(hours.First());
                         hours.RemoveAt(ZERO);
                     }
-                    clock.Enqueue(tempBall);
+                    clockQueue.Enqueue(tempBall);    //Finally add the fixed ball
                     break;
             }
         }
         #endregion
 
-        #region GetClock: get a clock from input file
-        public bool GetClock()
+        #region GetClock: get a valid number of balls from input file
+        public bool GetClockBalls()
         {
-            MDataBalls tempBall;
+            MDataBall tempBall;
             bool newInput;
 
-            nbrClocks = clocksFileContent.Count;
+            nbrClocks = clocksFile.Count;
             newInput = true;
 
-            //Execute only if clocksFileContent has some data
+            //Reset variables
+            clockQueue.Clear();
+            tempQueue.Clear();
+            nbrBalls = 0;
+
+            //Execute only if clocksFile has some data
             if (nbrClocks > ZERO)
             {
-                nbrBalls = clocksFileContent.First();
-                clocksFileContent.RemoveAt(ZERO);
+                //Don't stop the program, just find the next valid number of balls into clockFile
+                while (nbrBalls < (int)BallRange.MIN || nbrBalls > (int)BallRange.MAX)
+                {
+                    nbrBalls = clocksFile.First();
+                    clocksFile.RemoveAt(ZERO);
 
-                //A zero signifies the end of input
-                if (nbrBalls == ZERO)
-                    newInput = false;
+                    //zero: End of input
+                    if (nbrBalls == ZERO)
+                    {
+                        newInput = false;
+                        break;
+                    }
+                }
 
                 //Create balls for the clock
-                clock.Clear();
                 for (int i = 0; i < nbrBalls; i++)
                 {
-                    tempBall = new MDataBalls(i);
-                    clock.Enqueue(tempBall);
-                    tempList.Enqueue(tempBall);
+                    tempBall = new MDataBall(i);
+                    clockQueue.Enqueue(tempBall);
+                    tempQueue.Enqueue(tempBall);
                 }
-                    
-                //tempList = clock;   //save a temp copy 
             }
+            else
+                newInput = false;
 
             return newInput;
         }
         #endregion
 
-        #region OutputData: Write data (nbrBalls treated, Time/ duration of motion in day)
+        #region OutputData: Write data (nbrBalls treated, Time/ duration of motion in days)
         public void OutputData(bool createFile = false)
         {
-            string fullName;
             StreamWriter strWrite;
 
-            fileLocation = Path.Combine(System.Environment.CurrentDirectory, FOLDER_NAME); //System.Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            //fileLocation = Path.Combine(location);
-            //Directory.CreateDirectory(fileLocation);
-            fullName = Path.Combine(fileLocation, OUTPUT_FILE_NAME);
-
             //Create file only if the file doesn't exist or the first time this function is called
-            if (!File.Exists(fullName) || createFile)  //new FileInfo(fullName).Length == 0
-            {               
-                File.WriteAllText(fullName, string.Concat(HEADER_TEXT, Environment.NewLine, "==========================================", Environment.NewLine));                        //create or clear the file if it already exists
+            if (createFile)
+            {
+                fileLocation = Path.Combine(System.Environment.CurrentDirectory, FOLDER_NAME);
+                fullName = Path.Combine(fileLocation, OUTPUT_FILE_NAME);
+
+                File.WriteAllText(fullName, string.Concat(HEADER_TEXT, Environment.NewLine,
+                                 "======================================================================", Environment.NewLine));   //create or clear the file if it already exists
             }
 
             //Write text in file
             strWrite = File.AppendText(fullName);
-            strWrite.WriteLine(Environment.NewLine + nbrBalls + OUTPUT_TEXT + time/HOURS_IN_DAY + OUTPUT_DAYS); //nbrBalls, Time
+            strWrite.WriteLine(Environment.NewLine + nbrBalls + OUTPUT_TEXT + time + OUTPUT_DAYS); //nbrBalls, Time in days
 
             strWrite.Close();
         }
@@ -203,12 +278,8 @@ namespace TimeMotion
 
             //Convert number of balls read from string to integer. nbrClock: number max of clocks read
             nbrClocks = 0;
-            foreach (string nbrBalls in tempFileContent)
-            {
-                clocksFileContent.Add(int.Parse(nbrBalls));
-                //clocksFileContent = tempFileContent.Select(data => data).Cast<int>().ToList();
-            }
-            //nbrClocks = clocksFileContent.Count();
+            foreach (string nbrBallsRead in tempFileContent)
+                this.clocksFile.Add(int.Parse(nbrBallsRead));
         }
         #endregion
 

@@ -29,11 +29,6 @@ namespace TimeMotion
             DataContext = vmClock;
         }
 
-        public void Execute ()
-        {
-
-        }
-
         private void BtnEvaluate_Click(object sender, RoutedEventArgs e)
         {
             bool newFile = true;
@@ -43,13 +38,19 @@ namespace TimeMotion
                 vmClock.InputData();
 
                 //A zero signifies the end of input
-                while (vmClock.GetClock())
+                while (vmClock.GetClockBalls())
                 {
                     //calculate time
                     vmClock.EvaluateTime();
+
                     //Output
-                    vmClock.OutputData(newFile);
-                    newFile = false;
+                    if (newFile)
+                    {
+                        vmClock.OutputData(newFile);
+                        newFile = false;
+                    }
+                    else
+                        vmClock.OutputData();
                 }
 
                 MessageBox.Show("End of process", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
