@@ -64,7 +64,7 @@ namespace TimeMotion
         }
         #endregion
 
-        #region Time and Motion calcultation
+        #region EvaluateTime: Time and Motion calcultation
         public void EvaluateTime()
         {
             time = 0;  //nbr of hours/days
