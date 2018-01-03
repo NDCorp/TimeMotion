@@ -26,8 +26,8 @@ Shane Frost - 5600861
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Label Grid.ColumnSpan="3" Name="LblTitle" Content="Time and Motion" Margin="5" HorizontalContentAlignment="Center" FontSize="25" FontWeight="DemiBold"/>
-        <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Name="TbkDescription" Text="The program will read a input file and return the result in Output file." 
-                   Margin="15" FontSize="14" />
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Name="TbkDescription" Text="The program will read a input file and return the result in output file." 
+                   Margin="15" FontSize="14" TextAlignment="Center"/>
         <Button Grid.Row="3" Grid.Column="1" Name="BtnEvaluate" Content="Evaluate" Margin="15 40" FontSize="15" FontWeight="DemiBold" Click="BtnEvaluate_Click"/>
     </Grid>
 </Window>
