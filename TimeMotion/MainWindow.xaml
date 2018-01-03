@@ -1,4 +1,12 @@
-﻿<Window x:Class="TimeMotion.MainWindow"
+﻿<!-- Team one: Time and Motion
+Edward Barber - 7925969
+Abhishek Sharma - 7719818
+Mireille Tabod Epse Nubaga - 6542864
+Joseph Kasumba - 8147696
+Jeewan Kalia - 8032997
+Shane Frost - 5600861
+-->
+<Window x:Class="TimeMotion.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"

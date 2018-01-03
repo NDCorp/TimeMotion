@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿/* Team one: Time and Motion
+Edward Barber - 7925969
+Abhishek Sharma - 7719818
+Mireille Tabod Epse Nubaga - 6542864
+Joseph Kasumba - 8147696
+Jeewan Kalia - 8032997
+Shane Frost - 5600861 
+*/
+
+using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace TimeMotion
 {

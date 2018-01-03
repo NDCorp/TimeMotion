@@ -2,6 +2,14 @@
 /* Source: This link has a good description of the problem:                 */
 /* http://code.jsoftware.com/wiki/Essays/The_Ball_Clock_Problem             */
 /****************************************************************************/
+/* Team one: Time and Motion
+Edward Barber - 7925969
+Abhishek Sharma - 7719818
+Mireille Tabod Epse Nubaga - 6542864
+Joseph Kasumba - 8147696
+Jeewan Kalia - 8032997
+Shane Frost - 5600861 
+*/
 
 using System;
 using System.Collections.Generic;
@@ -9,8 +17,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TimeMotion
 {
@@ -101,7 +107,6 @@ namespace TimeMotion
 
             //The relative order of balls has changed in (clock), now calculate the number of days (if clockQueue is not yet in initial state) 
             CalculateNbrDays();
-
         }
         #endregion
 
@@ -117,7 +122,8 @@ namespace TimeMotion
                     foreach (MDataBall currBall in clockQueue)
                         savedQueue.Enqueue(currBall);
 
-                //for each ball in clock queue, use its ballID to index a specific ball into the initial queue (tempQueue) and enqueue this ball from tempQueue into clock
+                //for each ball in clock queue (sequence), use its ballID to index a specific ball into the initial queue (tempQueue) 
+                //and enqueue this ball from tempQueue into clock
                 clockQueue.Clear();
                 foreach (MDataBall currBall in savedQueue)
                     clockQueue.Enqueue(tempQueue.ElementAt(currBall.BallID));
@@ -136,7 +142,7 @@ namespace TimeMotion
         #region CheckInitialState: Check if Initial State
         private bool CheckInitialState(Queue<MDataBall> currQueue)
         {
-            bool initial = true;
+            bool isInitialState = true;
             int i = 0;
 
             foreach (MDataBall currBall in currQueue)
@@ -144,12 +150,12 @@ namespace TimeMotion
                 //for each ball, if one doesn't match, the queue is not in the initial state, so leave and return false
                 if (currBall.BallID != i++)
                 {
-                    initial = false;
+                    isInitialState = false;
                     break;
                 }
             }
 
-            return initial;
+            return isInitialState;
         }
         #endregion
 
@@ -254,8 +260,9 @@ namespace TimeMotion
                 fileLocation = Path.Combine(System.Environment.CurrentDirectory, FOLDER_NAME);
                 fullName = Path.Combine(fileLocation, OUTPUT_FILE_NAME);
 
+                //create or clear the file if it already exists
                 File.WriteAllText(fullName, string.Concat(HEADER_TEXT, Environment.NewLine,
-                                 "======================================================================", Environment.NewLine));   //create or clear the file if it already exists
+                                 "======================================================================", Environment.NewLine));
             }
 
             //Write text in file
@@ -269,17 +276,16 @@ namespace TimeMotion
         #region InputData: Read file and convert data to int
         public void InputData()
         {
-            const int FILE_NBR = 0;
-            string[] clocksFile, tempFileContent;
+            string clocksFileRead;
+            string[] tempFileContent;
 
             fileLocation = Path.Combine(System.Environment.CurrentDirectory, FOLDER_NAME);
-            clocksFile = Directory.GetFiles(fileLocation, INPUT_FILE_NAME, SearchOption.TopDirectoryOnly);
-            tempFileContent = File.ReadAllLines(clocksFile[FILE_NBR]);
+            clocksFileRead = Path.Combine(fileLocation, INPUT_FILE_NAME);
+            tempFileContent = File.ReadAllLines(clocksFileRead);
 
-            //Convert number of balls read from string to integer. nbrClock: number max of clocks read
-            nbrClocks = 0;
+            //Convert number of balls read from string to integer.
             foreach (string nbrBallsRead in tempFileContent)
-                this.clocksFile.Add(int.Parse(nbrBallsRead));
+                clocksFile.Add(int.Parse(nbrBallsRead));
         }
         #endregion
 
